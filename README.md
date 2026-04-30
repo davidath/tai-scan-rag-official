@@ -17,9 +17,9 @@ This project provides a RAG pipeline for analyzing AI systems against the EU AI 
 
 ```
 NaiveRAG (BaseRAG)
-├── Embedding Generator (HuggingFace / Ollama / FHH Gateway)
+├── Embedding Generator (HuggingFace / Ollama / FHG Gateway)
 ├── Annoy Index (vector similarity search)
-└── Text Generator (HuggingFace / Ollama / FHH Gateway)
+└── Text Generator (HuggingFace / Ollama / FHG Gateway)
 ```
 
 ## Configuration
@@ -35,7 +35,7 @@ Configuration is managed via YAML files. Key settings:
 Required for Docker deployment:
 
 | Variable | Description |
-|------ ----|-- ---------|
+|----------|---------------------------|
 | `FHG_GATEWAY_BASE_URL` | Fraunhofer Gateway API base URL |
 | `RAG_AUTH_TOKEN` | Authentication token for the Fraunhofer Gateway |
 
@@ -73,7 +73,7 @@ The pipeline:
 
 - Python 3.10+
 - torch, numpy, transformers
-- openai (for FHH Gateway)
+- openai (for FHG Gateway)
 - ollama
 - annoy
 - scikit-learn
