@@ -67,9 +67,9 @@ class HugFaceEmbeddingGenerator():
 
 
 class OllamaEmbeddingGenerator():
-    def __init__(self, conf, host='http://localhost:11434'):
+    def __init__(self, conf):
         self.model_name = conf['RAG']['emb_gen']['model']
-        self.model = Client(host=host)
+        self.model = Client(host=os.environ.get('OLLAMA_HOST'))
 
     def embed(self, sentences):
         emb = self.model.embed(model=self.model_name,
@@ -114,9 +114,9 @@ class HugFaceTextGenerator():
 
 
 class OllamaTextGenerator():
-    def __init__(self, conf, host='http://localhost:11434'):
+    def __init__(self, conf):
         self.model_name = conf['RAG']['text_gen']['model']
-        self.model = Client(host=host)
+        self.model = Client(host=os.environ.get('OLLAMA_HOST'))
         self.seed = int(conf['Experiment']['seed'])
         self.temp = float(conf['Experiment']['llm_temp'])
 
@@ -132,9 +132,7 @@ class FHGGatewayEmbeddingGenerator():
     def __init__(self, conf):
         self.model_name = conf['RAG']['emb_gen']['model']
         self.client = OpenAI(
-            api_key="xxxx",
-            default_headers={
-                "Authorization": f"Basic {conf['RAG']['auth_token']}"},
+            api_key=os.environ.get('FHG_API_KEY'),
             base_url=os.environ.get('FHG_GATEWAY_BASE_URL')
         )
 
@@ -150,9 +148,7 @@ class FHGGatewayTextGenerator():
     def __init__(self, conf):
         self.model_name = conf['RAG']['text_gen']['model']
         self.client = OpenAI(
-            api_key="xxxx",
-            default_headers={
-                "Authorization": f"Basic {conf['RAG']['auth_token']}"},
+            api_key=os.environ.get('FHG_API_KEY'),
             base_url=os.environ.get('FHG_GATEWAY_BASE_URL')
         )
 
@@ -165,6 +161,39 @@ class FHGGatewayTextGenerator():
         return response.choices[0].text
 
 
+class FlinkyEmbeddingGenerator():
+    def __init__(self, conf):
+        self.model_name = conf['RAG']['emb_gen']['model']
+        self.client = OpenAI(
+            api_key=os.environ.get('FLINKY_API_KEY'),
+            base_url=os.environ.get('FLINKY_BASE_URL')
+        )
+
+    def embed(self, sentences):
+        emb = self.client.embeddings.create(
+            model=self.model_name,
+            input=sentences
+        )
+        return np.array([i.embedding for i in emb.data])
+
+
+class FlinkyTextGenerator():
+    def __init__(self, conf):
+        self.model_name = conf['RAG']['text_gen']['model']
+        self.client = OpenAI(
+            api_key=os.environ.get('FLINKY_API_KEY'),
+            base_url=os.environ.get('FLINKY_BASE_URL')
+        )
+
+    def generate(self, prompt):
+        response = self.client.chat.completions.create(
+            model=self.model_name,
+            messages=[{'role': 'user', 'content': prompt}],
+            max_tokens=32768
+        )
+        return response.choices[0].message.content
+
+
 def get_embedding_generator(conf):
     framework = conf['RAG']['emb_gen']['framework']
     if framework == 'huggingface':
@@ -173,6 +202,8 @@ def get_embedding_generator(conf):
         return OllamaEmbeddingGenerator(conf)
     elif framework == 'fhg':
         return FHGGatewayEmbeddingGenerator(conf)
+    elif framework == 'flinky':
+        return FlinkyEmbeddingGenerator(conf)
     else:
         raise ValueError(f"Unsupported framework: {framework}")
 
@@ -185,5 +216,7 @@ def get_text_generator(conf):
         return OllamaTextGenerator(conf)
     elif framework == 'fhg':
         return FHGGatewayTextGenerator(conf)
+    elif framework == 'flinky':
+        return FlinkyTextGenerator(conf)
     else:
         raise ValueError(f"Unsupported framework: {framework}")
